@@ -1,0 +1,109 @@
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card h2 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.card form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card input {
+  font-family: inherit;
+  font-size: 0.95rem;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-alt);
+  color: var(--ink);
+  caret-color: var(--ink);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.card input::placeholder {
+  color: var(--ink-soft);
+}
+
+.card input:focus {
+  border-color: var(--accent);
+  background: var(--surface);
+  outline: none;
+}
+
+.card input.error {
+  border-color: var(--error);
+  background: rgba(214, 69, 91, 0.06);
+}
+
+.card input.error:focus {
+  border-color: var(--error);
+}
+
+.card button {
+  margin-top: 4px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.05s ease;
+}
+
+.card button:hover {
+  background: var(--accent-hover);
+}
+
+.card button:active {
+  transform: translateY(1px);
+}
+
+.subtitle {
+  font-weight: 400;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+.message {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 8px 10px;
+  border-radius: 6px;
+}
+
+.message.success {
+  color: var(--success);
+  background: rgba(31, 157, 107, 0.1);
+}
+
+.message.error {
+  color: var(--error);
+  background: rgba(214, 69, 91, 0.1);
+}
+.message-link {
+  color: inherit;
+  text-decoration: underline;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.message-link:hover {
+  opacity: 0.8;
+}
