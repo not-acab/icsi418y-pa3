@@ -8,9 +8,9 @@ const Signup = ({ activeCard, setActiveCard, getMessage, sendMessage }) => {
     const [lastname, setLastName] = useState("");
     const [password, setPassword] = useState("");
     const [errors, setErrors] = useState({});
-    /* Messages */
-    const [message, setMessage] = useState("");
-    const [messageType, setMessageType] = useState("");
+    /* Server Notices */
+    const [notice, setNotice] = useState("");
+    const [noticeType, setNoticeType] = useState("");
     /* Card switching */
     const [lastActiveCard, setLastActiveCard] = useState(activeCard);
     /* Process messages - thank you 412 */
@@ -19,6 +19,8 @@ const Signup = ({ activeCard, setActiveCard, getMessage, sendMessage }) => {
     const [showLoginLink, setShowLoginLink] = useState(false);
     /* Refernce to username input - needed to focus on switch */
     const usernameRef = useRef(null);
+    /* Reference to notice element - focus when displayed */
+    const noticeRef = useRef(null);
 
 
     /* Clear card when typing in Login */
@@ -30,7 +32,7 @@ const Signup = ({ activeCard, setActiveCard, getMessage, sendMessage }) => {
             setUsername("");
             setPassword("");
             setErrors({});
-            setMessage("");
+            setNotice("");
         }
     }
 
@@ -50,6 +52,13 @@ const Signup = ({ activeCard, setActiveCard, getMessage, sendMessage }) => {
         }
     }, [getMessage]);
 
+    useEffect(() => {
+        if (notice !== "") {
+            noticeRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+            noticeRef.current?.focus();
+        }
+    }, [notice]);
+
     /* Submit form */
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -65,7 +74,7 @@ const Signup = ({ activeCard, setActiveCard, getMessage, sendMessage }) => {
 
         try {
             /* POST Request */
-            const response = await fetch ("http://localhost:9000/signup", {
+            const response = await fetch ("http://localhost:9000/api/users", {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({ firstname, lastname, username, password })
@@ -73,20 +82,20 @@ const Signup = ({ activeCard, setActiveCard, getMessage, sendMessage }) => {
 
              /* POST Response - always clear password & set server message */
             const data = await response.json();
-            setMessage(data.message);
+            setNotice(data.message);
             setPassword("");
             setShowLoginLink(false);
 
             if (response.ok) {
                 /* Success stylings - clear inputs for extra user feedback */
-                setMessageType("success");
+                setNoticeType("success");
                 setUsername("");
                 setFirstName("");
                 setLastName("");
                 setErrors({});
             } else {
                 /* Error Stylings */
-                setMessageType("error");
+                setNoticeType("error");
                 if (data.message.toLowerCase().includes("exists")) {
                     /* User already exists - clear everything but the username and make all fields an error */
                     setShowLoginLink(true)
@@ -97,8 +106,8 @@ const Signup = ({ activeCard, setActiveCard, getMessage, sendMessage }) => {
             }
         }
         catch (error) {
-            setMessage("Could not connect to server");
-            setMessageType("error");
+            setNotice("Could not connect to server");
+            setNoticeType("error");
             console.error(error);
         }
     };
@@ -153,13 +162,13 @@ const Signup = ({ activeCard, setActiveCard, getMessage, sendMessage }) => {
                 />
                 <button type="submit">Sign Up</button>
             </form>
-            {/* Overwrites message with a hyperlink to Login */}
-            {message && (
-                <p className={`message ${messageType}`}>
+            {/* Overwrites notice with a hyperlink to Login */}
+            {notice && (
+                <p className={`notice ${noticeType}`} ref={noticeRef}>
                     {showLoginLink ? (
                         <>That user already exists.{" "}
                             <a href="#login"
-                                className="message-link"
+                                className="notice-link"
                                 onClick={(event) => {
                                     event.preventDefault();
                                     sendMessage({ to: "login", username });
@@ -167,7 +176,7 @@ const Signup = ({ activeCard, setActiveCard, getMessage, sendMessage }) => {
                             >Did you mean to Login?
                             </a>
                         </>
-                    ) : (message)}
+                    ) : (notice)}
                 </p>
             )}
         </div>

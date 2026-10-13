@@ -1,14 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 import "./auth.css";
 
-const Login = ({ activeCard, setActiveCard, getMessage, sendMessage, setIsLoggedIn }) => {
+const Login = ({ activeCard, setActiveCard, getMessage, sendMessage, onLogin }) => {
     /* Fields */
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [errors, setErrors] = useState({});
-    /* Messages */
-    const [message, setMessage] = useState("");
-    const [messageType, setMessageType] = useState("");
+    /* Server Notices */
+    const [notice, setNotice] = useState("");
+    const [noticeType, setNoticeType] = useState("");
     /* Card switching */
     const [lastActiveCard, setLastActiveCard] = useState(activeCard);
     /* Process messages - thank you 412 */
@@ -17,6 +17,8 @@ const Login = ({ activeCard, setActiveCard, getMessage, sendMessage, setIsLogged
     const [showSignupLink, setShowSignupLink] = useState(false);
     /* Refernce to username input - needed to focus on switch */
     const usernameRef = useRef(null);
+    /* Reference to notice element - focus when displayed */
+    const noticeRef = useRef(null);
 
 
     /* Clear card when Signup becomes the active card */
@@ -25,7 +27,7 @@ const Login = ({ activeCard, setActiveCard, getMessage, sendMessage, setIsLogged
         if (activeCard === "signup") {
             setUsername("");
             setPassword("");
-            setMessage("");
+            setNotice("");
             setErrors({});
         }
     }
@@ -46,6 +48,13 @@ const Login = ({ activeCard, setActiveCard, getMessage, sendMessage, setIsLogged
         }
     }, [getMessage]);
 
+    useEffect(() => {
+        if (notice !== "") {
+            noticeRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+            noticeRef.current?.focus();
+        }
+    }, [notice]);
+
     /* Submit Form */
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -59,7 +68,7 @@ const Login = ({ activeCard, setActiveCard, getMessage, sendMessage, setIsLogged
 
         try {
             /* POST Request */
-            const response = await fetch("http://localhost:9000/login", {
+            const response = await fetch("http://localhost:9000/api/users/login", {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({ username, password })
@@ -68,18 +77,18 @@ const Login = ({ activeCard, setActiveCard, getMessage, sendMessage, setIsLogged
             /* POST Response - always clear password & set server message */
             const data = await response.json();
             setPassword("");
-            setMessage(data.message);
+            setNotice(data.message);
             setShowSignupLink(false);
 
             if (response.ok) {
                 /* Success styling */
-                setMessageType("success");
+                setNoticeType("success");
                 setErrors({});
-                /* Set isLoggedIn to true on successful login */
-                setIsLoggedIn(true);
+                /* Tell the layout who logged in - the auth route then redirects to /projects */
+                onLogin(data.user?.f_name || username);
             } else {
                 /* Error styling */
-                setMessageType("error");
+                setNoticeType("error");
                 /* Determine the nature of the error */
                 if (data.message.toLowerCase().includes("user")) {
                     setErrors({ username: true });
@@ -94,8 +103,8 @@ const Login = ({ activeCard, setActiveCard, getMessage, sendMessage, setIsLogged
             }
         }
         catch (error) {
-            setMessage("Could not connect to the server");
-            setMessageType("error");
+            setNotice("Could not connect to the server");
+            setNoticeType("error");
             setShowSignupLink(false);
             console.error(error);
 
@@ -133,12 +142,12 @@ const Login = ({ activeCard, setActiveCard, getMessage, sendMessage, setIsLogged
                 <button type="submit">Login</button>
             </form>
             {/* Overwrites message with a hyperlink to Signup */}
-            {message && (
-                <p className={`message ${messageType}`}>
+            {notice && (
+                <p className={`notice ${noticeType}`} ref={noticeRef}>
                     {showSignupLink ? (
                         <>That user does not exist.{" "}
                             <a href="#signup"
-                                className="message-link"
+                                className="notice-link"
                                 onClick={(event) => {
                                     event.preventDefault();
                                     sendMessage({ to: "signup", username });
@@ -146,7 +155,7 @@ const Login = ({ activeCard, setActiveCard, getMessage, sendMessage, setIsLogged
                             >Did you mean to Signup?
                             </a>
                         </>
-                    ) : (message)}
+                    ) : (notice)}
                 </p>
             )}
         </div>

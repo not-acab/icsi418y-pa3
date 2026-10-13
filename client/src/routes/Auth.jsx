@@ -1,13 +1,18 @@
-import { useState, } from "react";
+import { useState } from "react";
+import { Navigate, useOutletContext } from "react-router";
 import Signup from "../components/auth/Signup";
 import Login from "../components/auth/Login";
-import "./Authenticate.css";
+import "./Auth.css";
 
-const Authenticate = ({ setIsLoggedIn, setUser }) => {
+const Auth = () => {
+    const { isLoggedIn, onLogin } = useOutletContext();
     /* Which card has foucs */
     const [activeCard, setActiveCard] = useState("");
     /* { to: "signup" | "login", username }: hand username to other card:  */
     const [message, setMessage] = useState(null);
+
+    /* Logged in users go straight to their projects */
+    if (isLoggedIn) return <Navigate to="/projects" replace />;
 
     /* JSX */
     return (
@@ -17,8 +22,7 @@ const Authenticate = ({ setIsLoggedIn, setUser }) => {
                 setActiveCard={setActiveCard}
                 getMessage={message}
                 sendMessage={setMessage}
-                setIsLoggedIn={setIsLoggedIn}
-                setUser={setUser}
+                onLogin={onLogin}
             />
             <span className="auth-divider">-or-</span>
             <Signup
@@ -31,4 +35,4 @@ const Authenticate = ({ setIsLoggedIn, setUser }) => {
     );
 };
 
-export default Authenticate;
+export default Auth;

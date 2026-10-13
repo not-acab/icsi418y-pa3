@@ -80,7 +80,7 @@
   color: var(--ink-soft);
 }
 
-.message {
+.notice {
   margin: 0;
   font-size: 0.85rem;
   font-weight: 600;
@@ -88,22 +88,22 @@
   border-radius: 6px;
 }
 
-.message.success {
+.notice.success {
   color: var(--success);
   background: rgba(31, 157, 107, 0.1);
 }
 
-.message.error {
+.notice.error {
   color: var(--error);
   background: rgba(214, 69, 91, 0.1);
 }
-.message-link {
+.notice-link {
   color: inherit;
   text-decoration: underline;
   font-weight: 700;
   cursor: pointer;
 }
 
-.message-link:hover {
+.notice-link:hover {
   opacity: 0.8;
 }

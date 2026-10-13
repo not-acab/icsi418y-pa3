@@ -1,103 +1,34 @@
+/*
+ *
+ *
+ * API Structure for the front end to talk to the backend.
+ *
+ * /api/users (POST) -> Create a new user (signup)
+ * /api/users (GET) -> Get all registered users
+ * /api/users/login (POST) {username, password} -> Login
+ *
+ * /api/projects (POST) {name, description, status, project_lead_id} -> Create a new project
+ * /api/projects (GET) -> Get all projects (each includes its project lead)
+ * /api/projects/:projectId/members (GET) -> Get all members of a project
+ * /api/projects/:projectId/members (POST) {user_id} -> Add a member to a project
+ * /api/projects/:projectId/members/:userId (DELETE) -> Remove a member from a project
+ *
+ * Collections: users, projects, projectmemberships
+ *
+ */
+
 require("dotenv").config();
 
 const { MongoClient } = require("mongodb");
 const express = require("express");
 const cors = require("cors");
-
-/* Holds users from db collection. Successful db connection required */
-let users;
+const usersRouter = require("./routes/users");
+const projectsRouter = require("./routes/projects");
 
 const app = express();
 
 app.use(express.json());
 app.use(cors());
-
-/* Signup Request */
-app.post("/signup", async (req, res) => {
-    const { firstname, lastname, username, password } = req.body;
-
-    /* Required field is missing */
-    if (!username) {
-        return res.status(400).json({
-            message: "All fields are required!"
-        });
-    }
-
-    try {
-        /* Check for username already in db */
-        if (await users.findOne({ username })) {
-            return res.status(409).json({
-                message: "User exists" //must contain "exists" for app validation
-            });
-        }
-
-        /* Required fields are missing */
-        if (!firstname || !lastname || !password) {
-        return res.status(400).json({
-            message: "All fields are required!"
-        });
-    }
-
-        /* Add user into db */
-        await users.insertOne({
-            f_name: firstname,
-            l_name: lastname,
-            username: username,
-            password: password
-        });
-    }
-    catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            message: "Server error"
-        });
-    }
-
-    /* Signup Success */
-    res.status(201).json({
-        message: "User created successfully."
-    });
-});
-
-/* Login Request */
-app.post("/login", async (req, res) => {
-    const { username, password } = req.body;
-
-    /* Required field missing */
-    if (!username) {
-        return res.status(400).json({
-            message: "Username and password are required!" 
-        });
-    }
-
-    try {
-        /* Find user by username */
-        const user = await users.findOne({ username });
-
-        if (!user) {
-            return res.status(401).json({
-                message: "User does not exist." //must contain "does not exist" for app validation
-            });
-        }
-
-        if (user.password !== password) {
-            return res.status(401).json({
-                message: "Incorrect Password!"
-            });
-        }
-    }
-    catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            message: "Server error"
-        });
-    }
-
-    /* Login Success */
-    res.status(200).json({
-        message: "Login successful!"
-    });
-});
 
 /* Health Check Request */
 app.get("/", (req, res) => {
@@ -105,7 +36,6 @@ app.get("/", (req, res) => {
         message: "Server is running"
     });
 });
-
 
 /* Start Server */
 const connectDatabase = async() => {
@@ -121,9 +51,31 @@ const connectDatabase = async() => {
         process.exit(1)
     }
 
-    /* Access db user collection */
+    /* Access db */
     const db = client.db("pa2");
-    users = db.collection("users");
+
+    /* A user can only be in a project once - enforced by the db, not just the routes */
+    await db.collection("projectmemberships").createIndex(
+        { project_id: 1, user_id: 1 },
+        { unique: true }
+    );
+
+    /* Inject db into routes - must be registered BEFORE the routers */
+    app.use((req, res, next) => {
+        req.db = db;
+        next();
+    });
+
+    app.use("/api/users", usersRouter);
+    app.use("/api/projects", projectsRouter);
+
+    /* Anything that slipped past a route's own try/catch */
+    app.use((error, req, res, next) => {
+        console.error(error);
+        res.status(500).json({
+            message: "Server error"
+        });
+    });
 
     /* Only listen after a succesful connection */
     app.listen(9000, () => {
